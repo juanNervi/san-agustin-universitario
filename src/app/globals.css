@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  --bordo: #1c0a10;
+  --bordo-deep: #120608;
+  --white: #ffffff;
+}
+
+@theme inline {
+  --color-bordo: var(--bordo);
+  --color-bordo-deep: var(--bordo-deep);
+  --color-background: var(--bordo);
+  --color-foreground: var(--white);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-bebas);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bordo);
+  color: var(--white);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-bebas), "Arial Narrow", sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.jersey-stripes {
+  background-image: repeating-linear-gradient(
+    -28deg,
+    transparent,
+    transparent 18px,
+    rgb(255 255 255 / 0.045) 18px,
+    rgb(255 255 255 / 0.045) 19px
+  );
+}
