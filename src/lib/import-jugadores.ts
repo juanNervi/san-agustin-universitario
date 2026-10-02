@@ -348,7 +348,7 @@ export function parseJugadoresImport(raw: string): ImportParseResult {
   for (let i = 1; i < lines.length; i += 1) {
     const lineNumber = i + 1;
     const cells = splitLine(lines[i], delimiter);
-    const draft: Partial<JugadorImportRow> = {};
+    const draft: Partial<Record<FieldKey, string | null>> = {};
 
     fieldByIndex.forEach((field, index) => {
       if (!field || field === "skip") return;
