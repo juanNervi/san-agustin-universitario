@@ -28,7 +28,6 @@ create table public.jugadores (
   email text,
   vencimiento_carnet date,
   vencimiento_ficha_medica date,
-  en_plantel_corriente boolean not null default false,
   created_at timestamptz not null default now()
 );
 

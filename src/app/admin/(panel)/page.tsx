@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { estadoVencimiento } from "@/lib/dates";
+import { estadoUltimoExamen, estadoVencimiento } from "@/lib/dates";
 import type { Jugador, Plantel } from "@/lib/types";
 
 export default async function AdminHomePage() {
@@ -18,7 +18,13 @@ export default async function AdminHomePage() {
     (jugador) =>
       estadoVencimiento(jugador.vencimiento_ficha_medica) === "vencido",
   ).length;
-  const enPlantel = lista.filter((jugador) => jugador.en_plantel_corriente).length;
+  const examenesVencidos = lista.filter(
+    (jugador) =>
+      estadoUltimoExamen(
+        jugador.fecha_ultimo_examen,
+        jugador.recibido ?? false,
+      ) === "vencido",
+  ).length;
 
   return (
     <div>
@@ -27,23 +33,41 @@ export default async function AdminHomePage() {
       </p>
       <h1 className="mt-2 font-display text-4xl tracking-[0.08em]">Delegados</h1>
       <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
-        Control de jugadores, vencimientos de carnet y ficha médica, y planteles
-        por categoría y año.
+        Control de jugadores, vencimientos de carnet, ficha médica y último
+        examen, y planteles por categoría y año.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ["Jugadores", String(lista.length)],
-          ["En plantel corriente", String(enPlantel)],
-          ["Carnets vencidos", String(carnetsVencidos)],
-          ["Fichas médicas vencidas", String(fichasVencidas)],
-        ].map(([label, value]) => (
-          <article key={label} className="border border-white/25 p-5">
+        {(
+          [
+            ["Jugadores", String(lista.length), "/admin/jugadores"],
+            [
+              "Carnets vencidos",
+              String(carnetsVencidos),
+              "/admin/jugadores?fk=vencido",
+            ],
+            [
+              "Fichas médicas vencidas",
+              String(fichasVencidas),
+              "/admin/jugadores?ff=vencido",
+            ],
+            [
+              "Exámenes vencidos",
+              String(examenesVencidos),
+              "/admin/jugadores?fe=vencido",
+            ],
+          ] as const
+        ).map(([label, value, href]) => (
+          <Link
+            key={label}
+            href={href}
+            className="border border-white/25 p-5 transition-colors hover:border-white"
+          >
             <p className="text-[0.65rem] uppercase tracking-[0.18em] text-white/55">
               {label}
             </p>
             <p className="mt-3 font-display text-4xl tracking-[0.08em]">{value}</p>
-          </article>
+          </Link>
         ))}
       </div>
 

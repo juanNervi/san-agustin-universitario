@@ -40,6 +40,12 @@ export function SiteHeader() {
               {item.label}
             </a>
           ))}
+          <Link
+            href="/admin"
+            className="text-[0.7rem] font-medium uppercase tracking-[0.22em] text-white/80 transition hover:text-white"
+          >
+            Admin
+          </Link>
           <a
             href={club.instagram}
             target="_blank"
@@ -81,6 +87,13 @@ export function SiteHeader() {
                 {item.label}
               </a>
             ))}
+            <Link
+              href="/admin"
+              className="font-display text-2xl tracking-[0.12em] text-white"
+              onClick={() => setOpen(false)}
+            >
+              Admin
+            </Link>
             <a
               href={club.instagram}
               target="_blank"

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddJugadorToPlantelForm } from "@/components/admin/add-jugador-to-plantel-form";
+import { JugadoresTable } from "@/components/admin/jugadores-table";
 import {
-  addJugadorToPlantelAction,
-  removeJugadorFromPlantelAction,
-} from "@/app/admin/actions";
-import { VencimientoBadge } from "@/components/admin/vencimiento-badge";
+  mapJugadorConPlanteles,
+  type JugadorConPlanteles,
+  type JugadorQueryRow,
+} from "@/lib/jugadores";
 import { createClient } from "@/lib/supabase/server";
-import type { Jugador, Plantel } from "@/lib/types";
+import type { Plantel } from "@/lib/types";
 
 export default async function PlantelDetallePage({
   params,
@@ -29,20 +31,21 @@ export default async function PlantelDetallePage({
     notFound();
   }
 
-  const { data: vinculos } = await supabase
-    .from("plantel_jugadores")
-    .select("jugador_id")
-    .eq("plantel_id", id);
+  const [{ data: vinculos }, { data: plantelesData }] = await Promise.all([
+    supabase.from("plantel_jugadores").select("jugador_id").eq("plantel_id", id),
+    supabase.from("planteles").select("id, nombre").order("nombre"),
+  ]);
 
   const ids = (vinculos ?? []).map((item) => item.jugador_id);
-  let jugadores: Jugador[] = [];
+  let jugadores: JugadorConPlanteles[] = [];
+
   if (ids.length) {
     const { data } = await supabase
       .from("jugadores")
-      .select("*")
+      .select("*, plantel_jugadores(planteles(id, nombre))")
       .in("id", ids)
       .order("nombre");
-    jugadores = (data ?? []) as Jugador[];
+    jugadores = ((data ?? []) as JugadorQueryRow[]).map(mapJugadorConPlanteles);
   }
 
   const { data: todos } = await supabase
@@ -50,6 +53,7 @@ export default async function PlantelDetallePage({
     .select("id, nombre, cedula")
     .order("nombre");
   const disponibles = (todos ?? []).filter((jugador) => !ids.includes(jugador.id));
+  const planteles = (plantelesData ?? []) as Array<{ id: string; nombre: string }>;
 
   return (
     <div>
@@ -70,53 +74,12 @@ export default async function PlantelDetallePage({
         <p className="mt-6 border border-white/40 px-3 py-2 text-sm">{error}</p>
       ) : null}
 
-      <div className="mt-8 overflow-x-auto border border-white/20">
-        <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-white/20 text-[0.65rem] uppercase tracking-[0.16em] text-white/55">
-            <tr>
-              <th className="px-4 py-3">Nombre</th>
-              <th className="px-4 py-3">Cédula</th>
-              <th className="px-4 py-3">Carnet</th>
-              <th className="px-4 py-3">Ficha médica</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {jugadores.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-white/60" colSpan={5}>
-                  Este plantel todavía no tiene jugadores.
-                </td>
-              </tr>
-            ) : (
-              jugadores.map((jugador) => (
-                <tr key={jugador.id} className="border-t border-white/10">
-                  <td className="px-4 py-4">{jugador.nombre}</td>
-                  <td className="px-4 py-4">{jugador.cedula}</td>
-                  <td className="px-4 py-4">
-                    <VencimientoBadge value={jugador.vencimiento_carnet} />
-                  </td>
-                  <td className="px-4 py-4">
-                    <VencimientoBadge value={jugador.vencimiento_ficha_medica} />
-                  </td>
-                  <td className="px-4 py-4">
-                    <form action={removeJugadorFromPlantelAction}>
-                      <input type="hidden" name="plantel_id" value={id} />
-                      <input type="hidden" name="jugador_id" value={jugador.id} />
-                      <button
-                        type="submit"
-                        className="text-[0.65rem] uppercase tracking-[0.16em] text-white/60 hover:text-white"
-                      >
-                        Sacar
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <JugadoresTable
+        jugadores={jugadores}
+        planteles={planteles}
+        emptyMessage="Este plantel todavía no tiene jugadores."
+        removeFromPlantelId={id}
+      />
 
       <section className="mt-12 border border-white/20 p-6">
         <h2 className="font-display text-2xl tracking-[0.1em]">
@@ -127,26 +90,7 @@ export default async function PlantelDetallePage({
             No hay jugadores fuera de este plantel. Cargalos primero en Jugadores.
           </p>
         ) : (
-          <form action={addJugadorToPlantelAction} className="mt-6 flex flex-col gap-4 sm:flex-row">
-            <input type="hidden" name="plantel_id" value={id} />
-            <select
-              name="jugador_id"
-              required
-              className="flex-1 border border-white/30 bg-bordo px-3 py-3 text-sm"
-            >
-              {disponibles.map((jugador) => (
-                <option key={jugador.id} value={jugador.id}>
-                  {jugador.nombre} · {jugador.cedula}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="border border-white bg-white px-4 py-3 text-[0.7rem] uppercase tracking-[0.18em] text-bordo"
-            >
-              Agregar
-            </button>
-          </form>
+          <AddJugadorToPlantelForm plantelId={id} disponibles={disponibles} />
         )}
       </section>
     </div>

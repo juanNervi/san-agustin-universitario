@@ -24,7 +24,14 @@ export type Jugador = {
   email: string | null;
   vencimiento_carnet: string | null;
   vencimiento_ficha_medica: string | null;
-  en_plantel_corriente: boolean;
+  sexo: string | null;
+  fecha_fichaje: string | null;
+  calidad: string | null;
+  instituto: string | null;
+  carrera: string | null;
+  fecha_ingreso: string | null;
+  fecha_ultimo_examen: string | null;
+  recibido: boolean;
   created_at: string;
 };
 
